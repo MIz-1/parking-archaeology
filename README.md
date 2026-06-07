@@ -130,3 +130,15 @@ python demo_1_parking_logger.py
 
 Self-taught developer exploring AI, smart city solutions, and full-stack development.
 Built for learning and portfolio — not production.
+
+---
+
+## App Screenshots
+
+| Home — Parking Logs | Log Parking Form |
+|---|---|
+| ![Home](docs/screenshots/home.png) | ![Log](docs/screenshots/log.png) |
+
+| Stats Dashboard | ML Predictions |
+|---|---|
+| ![Stats](docs/screenshots/stats.png) | ![ML](docs/screenshots/ml.png) |
