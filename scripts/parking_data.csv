@@ -1,6 +1,4 @@
 id,location,spot,date,time,duration_min,cost,notes
-PKG-20260601091523,DHA Mall,A-12,2026-06-01,09:15:23,45,150,Morning visit
-PKG-20260601143045,Dolmen City,B-07,2026-06-01,14:30:45,60,200,Lunch break
 PKG-20260602103012,Lucky One Mall,C-03,2026-06-02,10:30:12,90,250,Weekend shopping
 PKG-20260602171534,Packages Mall,D-05,2026-06-02,17:15:34,30,100,Quick stop
 PKG-20260603084521,Hyperstar,A-08,2026-06-03,08:45:21,120,300,Grocery run

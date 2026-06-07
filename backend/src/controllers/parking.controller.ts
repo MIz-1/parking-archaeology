@@ -4,6 +4,7 @@ import {
   getParkingLog,
   createParkingLog,
   getParkingStats,
+  deleteParkingLog,
 } from '../services/parking.service';
 import { getParkingPrediction } from '../services/ml.service';
 
@@ -89,5 +90,19 @@ export const getPrediction = async (req: Request, res: Response) => {
     res.json({ success: true, data: prediction });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to get prediction' });
+  }
+};
+
+// ── Delete Parking Log ─────────────────────────────────────
+export const deleteParking = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const deleted = await deleteParkingLog(id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: 'Log not found' });
+    }
+    res.json({ success: true, message: `Log ${id} deleted` });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to delete log' });
   }
 };

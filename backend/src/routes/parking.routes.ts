@@ -3,17 +3,18 @@ import {
   getAllParkings,
   getParkingById,
   createParking,
+  deleteParking,
   getStats,
   getPrediction
 } from '../controllers/parking.controller';
 
 const router = Router();
 
-// ── CRUD Routes ────────────────────────────────────────────
-router.get('/',           getAllParkings);   // Get all logs
-router.get('/stats',      getStats);         // Get statistics
-router.get('/predict',    getPrediction);    // ML prediction
-router.get('/:id',        getParkingById);   // Get single log
-router.post('/',          createParking);    // Create new log
+router.get('/',        getAllParkings);
+router.get('/stats',   getStats);
+router.get('/predict', getPrediction);
+router.post('/',       createParking);
+router.delete('/:id',  deleteParking);
+router.get('/:id',     getParkingById);
 
 export default router;
