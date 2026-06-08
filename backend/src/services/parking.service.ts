@@ -1,7 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-import { parse } from 'csv-parse/sync';
-import { stringify } from 'csv-stringify/sync';
+import db from './database';
 
 export interface ParkingLog {
   id: string;
@@ -14,27 +11,14 @@ export interface ParkingLog {
   notes: string;
 }
 
-const DATA_FILE = path.join(__dirname, '../../..', 'scripts', 'parking_data.csv');
-
 export const getAllParkingLogs = async (): Promise<ParkingLog[]> => {
-  if (!fs.existsSync(DATA_FILE)) return [];
-  const content = fs.readFileSync(DATA_FILE, 'utf-8');
-  const records = parse(content, { columns: true, skip_empty_lines: true });
-  return records.map((r: any) => ({
-    id:           r.id,
-    location:     r.location,
-    spot:         r.spot,
-    date:         r.date,
-    time:         r.time,
-    duration_min: Number(r.duration_min),
-    cost:         Number(r.cost),
-    notes:        r.notes
-  }));
+  const rows = db.prepare('SELECT * FROM parking_logs ORDER BY date DESC, time DESC').all();
+  return rows as ParkingLog[];
 };
 
 export const getParkingLog = async (id: string): Promise<ParkingLog | null> => {
-  const logs = await getAllParkingLogs();
-  return logs.find(log => log.id === id) || null;
+  const row = db.prepare('SELECT * FROM parking_logs WHERE id = ?').get(id);
+  return (row as ParkingLog) || null;
 };
 
 export const createParkingLog = async (data: Omit<ParkingLog, 'id' | 'date' | 'time'>): Promise<ParkingLog> => {
@@ -42,43 +26,40 @@ export const createParkingLog = async (data: Omit<ParkingLog, 'id' | 'date' | 't
   const id   = `PKG-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
   const date = now.toISOString().split('T')[0];
   const time = now.toTimeString().split(' ')[0];
-  const newLog: ParkingLog = { id, date, time, ...data };
-  const logs = await getAllParkingLogs();
-  logs.push(newLog);
-  const headers = ['id', 'location', 'spot', 'date', 'time', 'duration_min', 'cost', 'notes'];
-  const csv = stringify(logs, { header: true, columns: headers });
-  fs.writeFileSync(DATA_FILE, csv);
-  return newLog;
+
+  db.prepare(`
+    INSERT INTO parking_logs (id, location, spot, date, time, duration_min, cost, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, data.location, data.spot, date, time, data.duration_min, data.cost, data.notes || '');
+
+  return { id, date, time, ...data };
 };
 
 export const getParkingStats = async () => {
   const logs = await getAllParkingLogs();
+
   if (logs.length === 0) {
-    return { total_logs: 0, total_cost: 0, total_duration: 0, avg_cost: 0, favourite_location: null };
+    return { total_logs: 0, total_cost: 0, total_duration: 0, avg_cost: 0, favourite_location: null, locations: {} };
   }
+
   const total_cost     = logs.reduce((sum, l) => sum + l.cost, 0);
   const total_duration = logs.reduce((sum, l) => sum + l.duration_min, 0);
+
   const locationCount: Record<string, number> = {};
   logs.forEach(l => { locationCount[l.location] = (locationCount[l.location] || 0) + 1; });
   const favourite_location = Object.entries(locationCount).sort((a, b) => b[1] - a[1])[0][0];
+
   return {
-    total_logs:         logs.length,
+    total_logs: logs.length,
     total_cost,
     total_duration,
-    avg_cost:           total_cost / logs.length,
+    avg_cost: total_cost / logs.length,
     favourite_location,
-    locations:          locationCount
+    locations: locationCount
   };
 };
 
 export const deleteParkingLog = async (id: string): Promise<boolean> => {
-  const logs = await getAllParkingLogs();
-  const filtered = logs.filter(log => log.id !== id);
-  if (filtered.length === logs.length) return false;
-  const header = 'id,location,spot,date,time,duration_min,cost,notes\n';
-  const rows = filtered.map(l =>
-    `${l.id},${l.location},${l.spot},${l.date},${l.time},${l.duration_min},${l.cost},${l.notes}`
-  ).join('\n');
-  fs.writeFileSync(DATA_FILE, header + rows + '\n', 'utf-8');
-  return true;
+  const result = db.prepare('DELETE FROM parking_logs WHERE id = ?').run(id);
+  return result.changes > 0;
 };

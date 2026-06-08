@@ -14,9 +14,11 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.2",
     "axios": "^1.17.0",
+    "better-sqlite3": "^12.10.0",
     "cors": "^2.8.6",
     "csv-parse": "^6.2.1",
     "csv-stringify": "^6.7.0",
